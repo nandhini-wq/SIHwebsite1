@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tanker Supply Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parch:#EFE6CE;
+    --parch-dark:#E2D6B4;
+    --ink:#2B2620;
+    --ink-soft:#5C5343;
+    --well:#1B4B5A;
+    --well-light:#3E7A8C;
+    --tank-steel:#7A7568;
+    --ochre:#C4791F;
+    --ochre-bg:#F4E3C9;
+    --sage:#3F6B4C;
+    --sage-bg:#DCE8DD;
+    --rust:#A33D2C;
+    --rust-bg:#F3DCD5;
+    --line:#C9BC97;
+    --shadow: 0 2px 8px rgba(43,38,32,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,255,255,0.35), transparent 40%),
+      var(--parch);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:28px 20px 80px;}
+
+  /* ===== Header ===== */
+  header{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:24px;
+    flex-wrap:wrap;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:18px; margin-bottom:26px;
+  }
+  .title-block{display:flex; align-items:center; gap:16px;}
+  h1{
+    font-family:'Fraunces', serif; font-weight:700; font-size:2.1rem;
+    margin:0; letter-spacing:-0.01em; line-height:1.05;
+  }
+  .subtitle{
+    font-family:'IBM Plex Mono', monospace; font-size:0.78rem; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;
+  }
+  .stamp{
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ink-soft);
+    border:1px solid var(--ink-soft); border-radius:3px; padding:6px 10px;
+    text-align:right; line-height:1.5;
+  }
+  .stamp b{color:var(--ink); display:block; font-size:0.85rem;}
+
+  /* ===== Legend / signature gauge key ===== */
+  .legend{
+    display:flex; gap:22px; align-items:center; margin-bottom:22px; flex-wrap:wrap;
+    font-family:'IBM Plex Mono', monospace; font-size:0.74rem; color:var(--ink-soft);
+  }
+  .legend-item{display:flex; align-items:center; gap:7px;}
+  .legend-item svg{width:22px; height:28px; display:block;}
+
+  /* ===== Controls ===== */
+  .controls{
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:18px;
+  }
+  .search-box{
+    flex:1 1 260px; position:relative;
+  }
+  input[type="text"], input[type="date"], input[type="number"], select{
+    font-family:'IBM Plex Sans', sans-serif; font-size:0.92rem;
+    padding:10px 12px; border:1.5px solid var(--line); border-radius:6px;
+    background:#fff; color:var(--ink); width:100%;
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--well); box-shadow:0 0 0 3px rgba(27,75,90,0.12); }
+  .filter-select{width:auto; min-width:150px;}
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:0.88rem;
+    padding:10px 18px; border-radius:6px; border:none; cursor:pointer;
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{ background:var(--well); color:#fff; box-shadow:var(--shadow);}
+  .btn-primary:hover{background:var(--well-light);}
+  .btn-ghost{ background:transparent; color:var(--ink); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink-soft);}
+  .btn-small{padding:6px 12px; font-size:0.78rem;}
+
+  /* ===== Table ===== */
+  .table-shell{
+    background:#fff; border-radius:10px; box-shadow:var(--shadow);
+    overflow:hidden; border:1px solid var(--parch-dark);
+  }
+  table{width:100%; border-collapse:collapse; font-size:0.88rem;}
+  thead th{
+    text-align:left; font-family:'IBM Plex Mono', monospace; font-size:0.7rem;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft);
+    background:var(--parch); padding:12px 14px; border-bottom:2px solid var(--ink);
+    white-space:nowrap;
+  }
+  tbody td{padding:12px 14px; border-bottom:1px solid var(--parch-dark); vertical-align:middle;}
+  tbody tr{animation: rowIn 0.35s ease backwards;}
+  tbody tr:hover{background:#FAF6EA;}
+  @keyframes rowIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .habitation-name{font-weight:600;}
+  .muted{color:var(--ink-soft); font-size:0.82rem;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  .row-actions{display:flex; gap:6px;}
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px;
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; font-weight:600;
+  }
+  .status-fed{background:var(--sage-bg); color:var(--sage);}
+  .status-due{background:var(--ochre-bg); color:var(--ochre);}
+  .status-overdue{background:var(--rust-bg); color:var(--rust);}
+
+  /* ===== Signature element: tank gauge ===== */
+  .gauge-cell{display:flex; align-items:center; gap:10px;}
+  .gauge-svg{width:26px; height:34px; flex-shrink:0;}
+  .gauge-days{font-family:'IBM Plex Mono', monospace; font-size:0.8rem;}
+
+  /* ===== Empty / loading / error states ===== */
+  .state-panel{
+    padding:60px 20px; text-align:center; color:var(--ink-soft);
+  }
+  .state-panel .icon{margin-bottom:14px;}
+  .state-panel h3{font-family:'Fraunces', serif; color:var(--ink); font-size:1.2rem; margin:0 0 6px;}
+  .state-panel p{margin:0 0 16px; font-size:0.9rem;}
+  .spinner{
+    width:34px; height:34px; border-radius:50%;
+    border:3px solid var(--parch-dark); border-top-color:var(--well);
+    animation:spin 0.8s linear infinite; margin:0 auto 14px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ===== Modal / form ===== */
+  .overlay{
+    position:fixed; inset:0; background:rgba(43,38,32,0.45); backdrop-filter:blur(2px);
+    display:flex; align-items:center; justify-content:center; z-index:50;
+    opacity:0; pointer-events:none; transition:opacity 0.2s ease;
+  }
+  .overlay.show{opacity:1; pointer-events:auto;}
+  .modal{
+    background:#fff; border-radius:12px; width:min(560px, 92vw); max-height:88vh; overflow-y:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+    transform:translateY(14px) scale(0.98); transition:transform 0.2s ease;
+    padding:28px 28px 24px;
+  }
+  .overlay.show .modal{transform:translateY(0) scale(1);}
+  .modal h2{font-family:'Fraunces', serif; margin:0 0 4px; font-size:1.4rem;}
+  .modal .modal-sub{color:var(--ink-soft); font-size:0.85rem; margin-bottom:18px;}
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:0.72rem;
+    text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin-bottom:5px;
+  }
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .error-text{color:var(--rust); font-size:0.78rem; margin-top:4px; display:none;}
+  .field.invalid input, .field.invalid select{border-color:var(--rust); background:#FFF8F7;}
+  .field.invalid .error-text{display:block;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:20px;}
+
+  /* ===== Toast ===== */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--parch); padding:12px 20px; border-radius:8px;
+    font-size:0.86rem; box-shadow:0 8px 24px rgba(0,0,0,0.3); z-index:100;
+    opacity:0; transition:all 0.25s ease; pointer-events:none;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.error{background:var(--rust);}
+
+  footer{margin-top:26px; font-size:0.76rem; color:var(--ink-soft); text-align:center;}
+
+  @media (max-width:700px){
+    .field-row{grid-template-columns:1fr;}
+    thead th:nth-child(4), tbody td:nth-child(4){display:none;}
+    .stamp{display:none;}
+    table{font-size:0.8rem;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+        <circle cx="23" cy="23" r="22" fill="#1B4B5A"/>
+        <path d="M23 10 C16 20 12 25 12 30a11 11 0 0 0 22 0c0-5-4-10-11-20z" fill="#EFE6CE"/>
+      </svg>
+      <div>
+        <h1>Tanker Supply Register</h1>
+        <div class="subtitle">Habitation-wise water tanker trip log</div>
+      </div>
+    </div>
+    <div class="stamp">
+      <b id="today-stamp"></b>
+      Block Water Supply Office
+    </div>
+  </header>
+
+  <div class="legend">
+    <span style="font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft);">Days since last trip:</span>
+    <div class="legend-item" id="legend-fed"></div>
+    <div class="legend-item" id="legend-due"></div>
+    <div class="legend-item" id="legend-overdue"></div>
+  </div>
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search habitation, driver, tanker no...">
+    </div>
+    <select class="filter-select" id="filter-status">
+      <option value="all">All statuses</option>
+      <option value="fed">Fed (≤3 days)</option>
+      <option value="due">Due (4–7 days)</option>
+      <option value="overdue">Overdue (&gt;7 days)</option>
+    </select>
+    <button class="btn btn-ghost" id="sort-btn">Sort: oldest supply first</button>
+    <button class="btn btn-primary" id="add-trip-btn">+ Log new trip</button>
+  </div>
+
+  <div class="table-shell">
+    <div id="table-region"></div>
+  </div>
+
+  <footer>Derived fields (days since last supply, status) recompute automatically whenever a trip is added or edited. Data persists in this browser's local storage.</footer>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modal-title">Log a tanker trip</h2>
+    <div class="modal-sub">Every field is checked before the trip is saved.</div>
+    <form id="trip-form" novalidate>
+      <input type="hidden" id="trip_id">
+      <div class="field" id="f-habitation">
+        <label for="habitation">Habitation</label>
+        <input type="text" id="habitation" placeholder="e.g. Kondapalli Colony">
+        <div class="error-text">Enter the habitation name.</div>
+      </div>
+      <div class="field-row">
+        <div class="field" id="f-tanker_no">
+          <label for="tanker_no">Tanker number</label>
+          <input type="text" id="tanker_no" placeholder="e.g. TN-07-B">
+          <div class="error-text">Enter the tanker's number.</div>
+        </div>
+        <div class="field" id="f-trip_date">
+          <label for="trip_date">Trip date</label>
+          <input type="date" id="trip_date">
+          <div class="error-text">Pick a valid date, not in the future.</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field" id="f-litres_supplied">
+          <label for="litres_supplied">Litres supplied</label>
+          <input type="number" id="litres_supplied" min="1" placeholder="e.g. 6000">
+          <div class="error-text">Enter litres greater than 0.</div>
+        </div>
+        <div class="field" id="f-households_served">
+          <label for="households_served">Households served</label>
+          <input type="number" id="households_served" min="1" placeholder="e.g. 42">
+          <div class="error-text">Enter at least 1 household.</div>
+        </div>
+      </div>
+      <div class="field" id="f-driver">
+        <label for="driver">Driver name</label>
+        <input type="text" id="driver" placeholder="e.g. R. Selvam">
+        <div class="error-text">Enter the driver's name.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Save trip</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ Storage layer (simulates server round-trip so
+   loading / error states are real, not decorative) ============ */
+const STORAGE_KEY = "tanker_register_v1";
+
+const seedData = [
+  {trip_id:1,  habitation:"Kondapalli Colony", tanker_no:"TN-07-B", trip_date:"2026-07-24", litres_supplied:6000, households_served:42, driver:"R. Selvam"},
+  {trip_id:2,  habitation:"Melur Hamlet",       tanker_no:"TN-07-A", trip_date:"2026-07-20", litres_supplied:5000, households_served:30, driver:"K. Muthu"},
+  {trip_id:3,  habitation:"Sengunthar Nagar",   tanker_no:"TN-07-B", trip_date:"2026-07-15", litres_supplied:6000, households_served:55, driver:"R. Selvam"},
+  {trip_id:4,  habitation:"Kondapalli Colony",  tanker_no:"TN-07-B", trip_date:"2026-07-10", litres_supplied:6000, households_served:42, driver:"R. Selvam"},
+  {trip_id:5,  habitation:"Puliyampatti",       tanker_no:"TN-07-C", trip_date:"2026-07-22", litres_supplied:4500, households_served:26, driver:"S. Anbu"},
+  {trip_id:6,  habitation:"Melur Hamlet",       tanker_no:"TN-07-A", trip_date:"2026-06-30", litres_supplied:5000, households_served:30, driver:"K. Muthu"},
+  {trip_id:7,  habitation:"Vellalapatti",       tanker_no:"TN-07-C", trip_date:"2026-07-05", litres_supplied:4000, households_served:19, driver:"S. Anbu"},
+  {trip_id:8,  habitation:"Puliyampatti",       tanker_no:"TN-07-C", trip_date:"2026-06-25", litres_supplied:4500, households_served:26, driver:"S. Anbu"},
+  {trip_id:9,  habitation:"Sengunthar Nagar",   tanker_no:"TN-07-B", trip_date:"2026-06-20", litres_supplied:6000, households_served:55, driver:"R. Selvam"},
+  {trip_id:10, habitation:"Odaiyur",            tanker_no:"TN-07-A", trip_date:"2026-07-18", litres_supplied:3000, households_served:14, driver:"K. Muthu"},
+  {trip_id:11, habitation:"",                   tanker_no:"TN-07-D", trip_date:"2026-07-12", litres_supplied:3500, households_served:20, driver:"M. Devan"}, // awkward: missing habitation
+  {trip_id:12, habitation:"Vellalapatti",       tanker_no:"TN-07-C", trip_date:"2026-05-01", litres_supplied:4000, households_served:19, driver:"S. Anbu"},
+  {trip_id:13, habitation:"Kondapalli colony",  tanker_no:"TN-07-B", trip_date:"2026-06-05", litres_supplied:6000, households_served:42, driver:"R. Selvam"}, // awkward: duplicate name, different case
+  {trip_id:14, habitation:"Odaiyur",            tanker_no:"TN-07-A", trip_date:"2026-06-10", litres_supplied:3000, households_served:14, driver:"K. Muthu"},
+  {trip_id:15, habitation:"Nallur Kuppam",      tanker_no:"TN-07-D", trip_date:"2023-08-14", litres_supplied:3000, households_served:11, driver:"M. Devan"}, // awkward: unusually old date
+  {trip_id:16, habitation:"Nallur Kuppam",      tanker_no:"TN-07-D", trip_date:"2026-07-23", litres_supplied:3200, households_served:11, driver:"M. Devan"},
+  {trip_id:17, habitation:"Melur Hamlet",       tanker_no:"TN-07-A", trip_date:"2026-07-25", litres_supplied:5000, households_served:30, driver:"K. Muthu"},
+  {trip_id:18, habitation:"Puliyampatti",       tanker_no:"TN-07-C", trip_date:"2026-07-01", litres_supplied:4500, households_served:26, driver:"S. Anbu"},
+  {trip_id:19, habitation:"Vellalapatti",       tanker_no:"TN-07-C", trip_date:"2026-06-15", litres_supplied:4000, households_served:19, driver:"S. Anbu"},
+  {trip_id:20, habitation:"Sengunthar Nagar",   tanker_no:"TN-07-B", trip_date:"2026-07-26", litres_supplied:6200, households_served:57, driver:"R. Selvam"}
+];
+
+function loadTrips(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedData));
+    return JSON.parse(JSON.stringify(seedData));
+  }
+  try{ return JSON.parse(raw); } catch(e){ throw new Error("corrupt-store"); }
+}
+function saveTrips(trips){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(trips));
+}
+
+let trips = [];
+let sortDir = "asc"; // oldest-supply-first
+let currentFilter = "all";
+let currentSearch = "";
+
+const region = document.getElementById("table-region");
+const today = new Date("2026-07-26T00:00:00"); // fixed "today" so the demo is reproducible
+
+document.getElementById("today-stamp").textContent =
+  today.toLocaleDateString("en-IN", {day:"numeric", month:"long", year:"numeric"});
+
+/* ============ Derived-value logic ============ */
+function daysSince(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  const diff = Math.round((today - d) / 86400000);
+  return diff;
+}
+function statusFor(days){
+  if(days <= 3) return "fed";
+  if(days <= 7) return "due";
+  return "overdue";
+}
+function habitationKey(name){
+  return (name || "").trim().toLowerCase();
+}
+
+// Build one row per DISTINCT habitation, showing its most recent trip + days since.
+function computeHabitationSummary(list){
+  const map = new Map();
+  list.forEach(t => {
+    const key = habitationKey(t.habitation);
+    if(!key) return; // skip records missing a habitation (surfaced separately)
+    const existing = map.get(key);
+    if(!existing || new Date(t.trip_date) > new Date(existing.trip_date)){
+      map.set(key, t);
+    }
+  });
+  return Array.from(map.values());
+}
+
+/* ============ Rendering ============ */
+function gaugeSVG(status){
+  const levels = {fed: 0.85, due: 0.45, overdue: 0.12};
+  const colors = {fed: "#3F6B4C", due: "#C4791F", overdue: "#A33D2C"};
+  const lvl = levels[status], col = colors[status];
+  const waterY = 6 + (26 * (1 - lvl));
+  return `
+  <svg class="gauge-svg" viewBox="0 0 26 34" fill="none">
+    <clipPath id="clip-${status}-${Math.random().toString(36).slice(2,7)}">
+      <path d="M13 4 C7 13 4 17 4 21a9 9 0 0 0 18 0c0-4-3-8-9-17z"/>
+    </clipPath>
+    <path d="M13 4 C7 13 4 17 4 21a9 9 0 0 0 18 0c0-4-3-8-9-17z" fill="#fff" stroke="${col}" stroke-width="1.6"/>
+    <rect x="3" y="${waterY}" width="20" height="26" fill="${col}" opacity="0.85">
+      <animate attributeName="y" from="30" to="${waterY}" dur="0.6s" fill="freeze" />
+    </rect>
+    <path d="M13 4 C7 13 4 17 4 21a9 9 0 0 0 18 0c0-4-3-8-9-17z" fill="none" stroke="${col}" stroke-width="1.6"/>
+  </svg>`;
+}
+
+function statusLabel(status){
+  return {fed:"Fed", due:"Due", overdue:"Overdue"}[status];
+}
+
+function renderLegend(){
+  document.getElementById("legend-fed").innerHTML = gaugeSVG("fed") + "<span>0–3 days (fed)</span>";
+  document.getElementById("legend-due").innerHTML = gaugeSVG("due") + "<span>4–7 days (due)</span>";
+  document.getElementById("legend-overdue").innerHTML = gaugeSVG("overdue") + "<span>&gt;7 days (overdue)</span>";
+}
+renderLegend();
+
+function renderLoading(){
+  region.innerHTML = `
+    <div class="state-panel">
+      <div class="spinner"></div>
+      <h3>Loading the register…</h3>
+      <p>Fetching trip records.</p>
+    </div>`;
+}
+
+function renderError(message, retryFn){
+  region.innerHTML = `
+    <div class="state-panel">
+      <div class="icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19" stroke="#A33D2C" stroke-width="2"/><path d="M20 11v12M20 27v.5" stroke="#A33D2C" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <h3>Could not load the register</h3>
+      <p>${message}</p>
+      <button class="btn btn-primary" id="retry-btn">Try again</button>
+    </div>`;
+  document.getElementById("retry-btn").onclick = retryFn;
+}
+
+function renderEmpty(reason){
+  region.innerHTML = `
+    <div class="state-panel">
+      <div class="icon"><svg width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M22 6 C14 18 9 24 9 30a13 13 0 0 0 26 0c0-6-5-12-13-24z" stroke="#7A7568" stroke-width="2" fill="none" stroke-dasharray="4 3"/></svg></div>
+      <h3>No trips to show</h3>
+      <p>${reason}</p>
+      <button class="btn btn-primary" id="empty-add-btn">+ Log the first trip</button>
+    </div>`;
+  document.getElementById("empty-add-btn").onclick = openAddModal;
+}
+
+function renderTable(){
+  let summary = computeHabitationSummary(trips)
+    .map(t => ({...t, days: daysSince(t.trip_date), status: statusFor(daysSince(t.trip_date))}));
+
+  if(currentSearch.trim()){
+    const q = currentSearch.trim().toLowerCase();
+    summary = summary.filter(t =>
+      (t.habitation||"").toLowerCase().includes(q) ||
+      (t.driver||"").toLowerCase().includes(q) ||
+      (t.tanker_no||"").toLowerCase().includes(q));
+  }
+  if(currentFilter !== "all"){
+    summary = summary.filter(t => t.status === currentFilter);
+  }
+  summary.sort((a,b) => sortDir === "asc" ? b.days - a.days : a.days - b.days);
+
+  const missingCount = trips.filter(t => !habitationKey(t.habitation)).length;
+
+  if(trips.length === 0){
+    renderEmpty("No tanker trips have been logged yet.");
+    return;
+  }
+  if(summary.length === 0){
+    renderEmpty("Nothing matches this search or filter. Clear it to see all habitations.");
+    return;
+  }
+
+  const rows = summary.map((t, i) => `
+    <tr style="animation-delay:${Math.min(i*0.03, 0.3)}s">
+      <td class="habitation-name">${escapeHTML(t.habitation)}</td>
+      <td class="mono">${t.tanker_no}</td>
+      <td class="mono">${formatDate(t.trip_date)}</td>
+      <td class="muted">${t.driver}</td>
+      <td class="mono">${t.litres_supplied.toLocaleString("en-IN")} L</td>
+      <td class="mono">${t.households_served}</td>
+      <td>
+        <div class="gauge-cell">
+          ${gaugeSVG(t.status)}
+          <span class="gauge-days">${t.days} day${t.days===1?"":"s"}</span>
+        </div>
+      </td>
+      <td><span class="status-pill status-${t.status}">${statusLabel(t.status)}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="btn btn-ghost btn-small" onclick="openEditModal(${t.trip_id})">Edit</button>
+        </div>
+      </td>
+    </tr>`).join("");
+
+  const missingBanner = missingCount > 0 ? `
+    <div style="padding:10px 16px; background:var(--ochre-bg); color:var(--ochre); font-size:0.8rem; font-family:'IBM Plex Mono',monospace;">
+      ⚠ ${missingCount} record${missingCount>1?"s":""} in the raw log ${missingCount>1?"are":"is"} missing a habitation name and cannot be assigned — open them from the raw log to fix.
+    </div>` : "";
+
+  region.innerHTML = `
+    ${missingBanner}
+    <table>
+      <thead>
+        <tr>
+          <th>Habitation</th><th>Tanker</th><th>Last trip</th><th>Driver</th>
+          <th>Litres</th><th>Households</th><th>Since last supply</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function escapeHTML(s){ return (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function formatDate(s){ const d = new Date(s+"T00:00:00"); return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}); }
+
+/* ============ Boot sequence (simulated fetch, real error handling) ============ */
+function boot(){
+  renderLoading();
+  setTimeout(() => {
+    try{
+      trips = loadTrips();
+      renderTable();
+    }catch(e){
+      renderError("The stored register could not be read. It may be corrupted.", boot);
+    }
+  }, 450);
+}
+boot();
+
+/* ============ Controls ============ */
+document.getElementById("search-input").addEventListener("input", e => {
+  currentSearch = e.target.value; renderTable();
+});
+document.getElementById("filter-status").addEventListener("change", e => {
+  currentFilter = e.target.value; renderTable();
+});
+document.getElementById("sort-btn").addEventListener("click", e => {
+  sortDir = sortDir === "asc" ? "desc" : "asc";
+  e.target.textContent = "Sort: " + (sortDir === "asc" ? "oldest supply first" : "most recent first");
+  renderTable();
+});
+
+/* ============ Modal / form logic ============ */
+const overlay = document.getElementById("overlay");
+const form = document.getElementById("trip-form");
+let editingId = null;
+
+function openAddModal(){
+  editingId = null;
+  document.getElementById("modal-title").textContent = "Log a tanker trip";
+  form.reset();
+  document.getElementById("trip_date").value = today.toISOString().slice(0,10);
+  clearErrors();
+  overlay.classList.add("show");
+}
+function openEditModal(id){
+  const t = trips.find(x => x.trip_id === id);
+  if(!t) return;
+  editingId = id;
+  document.getElementById("modal-title").textContent = "Edit tanker trip";
+  document.getElementById("trip_id").value = t.trip_id;
+  document.getElementById("habitation").value = t.habitation;
+  document.getElementById("tanker_no").value = t.tanker_no;
+  document.getElementById("trip_date").value = t.trip_date;
+  document.getElementById("litres_supplied").value = t.litres_supplied;
+  document.getElementById("households_served").value = t.households_served;
+  document.getElementById("driver").value = t.driver;
+  clearErrors();
+  overlay.classList.add("show");
+}
+function closeModal(){ overlay.classList.remove("show"); }
+
+document.getElementById("add-trip-btn").addEventListener("click", openAddModal);
+document.getElementById("cancel-btn").addEventListener("click", closeModal);
+overlay.addEventListener("click", e => { if(e.target === overlay) closeModal(); });
+
+function clearErrors(){
+  document.querySelectorAll(".field").forEach(f => f.classList.remove("invalid"));
+}
+
+function validate(data){
+  const errors = {};
+  if(!data.habitation.trim()) errors.habitation = true;
+  if(!data.tanker_no.trim()) errors.tanker_no = true;
+  if(!data.trip_date) errors.trip_date = true;
+  else if(new Date(data.trip_date) > today) errors.trip_date = true;
+  if(!data.litres_supplied || data.litres_supplied <= 0) errors.litres_supplied = true;
+  if(!data.households_served || data.households_served <= 0) errors.households_served = true;
+  if(!data.driver.trim()) errors.driver = true;
+  return errors;
+}
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  clearErrors();
+  const data = {
+    habitation: document.getElementById("habitation").value,
+    tanker_no: document.getElementById("tanker_no").value,
+    trip_date: document.getElementById("trip_date").value,
+    litres_supplied: parseFloat(document.getElementById("litres_supplied").value),
+    households_served: parseInt(document.getElementById("households_served").value),
+    driver: document.getElementById("driver").value,
+  };
+  const errors = validate(data);
+  if(Object.keys(errors).length){
+    Object.keys(errors).forEach(k => document.getElementById("f-"+k).classList.add("invalid"));
+    showToast("Fix the highlighted fields before saving.", true);
+    return;
+  }
+
+  const saveBtn = document.getElementById("save-btn");
+  saveBtn.disabled = true; saveBtn.textContent = "Saving…";
+
+  setTimeout(() => { // simulated server round-trip
+    try{
+      if(editingId){
+        const idx = trips.findIndex(t => t.trip_id === editingId);
+        trips[idx] = {...trips[idx], ...data};
+      } else {
+        const newId = trips.length ? Math.max(...trips.map(t=>t.trip_id)) + 1 : 1;
+        trips.push({trip_id: newId, ...data});
+      }
+      saveTrips(trips);
+      renderTable();
+      closeModal();
+      showToast(editingId ? "Trip updated — days-since-supply recalculated." : "Trip logged — register updated.");
+    }catch(err){
+      showToast("Save failed. The record was not stored — try again.", true);
+    }finally{
+      saveBtn.disabled = false; saveBtn.textContent = "Save trip";
+    }
+  }, 350);
+});
+
+/* ============ Toast ============ */
+let toastTimer;
+function showToast(msg, isError){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " error" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3200);
+}
+</script>
+</body>
+</html>
